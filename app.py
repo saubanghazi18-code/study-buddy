@@ -3,38 +3,63 @@ import time
 
 st.set_page_config(page_title="Study Buddy", layout="wide", initial_sidebar_state="collapsed")
 
-# Dark Mature Theme
+# ==================== PREMIUM DARK THEME ====================
 st.markdown("""
 <style>
     .stApp {
-        background-color: #0a0a0a;
-        color: #e5e5e5;
+        background-color: #050505;
+        color: #e0e0e0;
     }
-    h1, h2, h3 {
-        color: #67e8f9;
+    h1, h2, h3, .stSubheader {
+        color: #a5f3fc;
     }
     .big-timer {
-        font-size: 7rem;
-        font-weight: bold;
-        font-family: monospace;
+        font-size: 7.2rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
         text-align: center;
         color: #67e8f9;
+        text-shadow: 0 0 20px rgba(103, 232, 249, 0.3);
+    }
+    .stButton>button {
+        background-color: #1f2937;
+        color: #e0f2fe;
+        border: 1px solid #334155;
+    }
+    .stButton>button:hover {
+        background-color: #334155;
+        border-color: #67e8f9;
+    }
+    .stButton>button[kind="primary"] {
+        background-color: #22d3ee;
+        color: #0f172a;
+    }
+    .chat-container {
+        background-color: #0f172a;
+        border-radius: 16px;
+        padding: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown("<h1 style='text-align:center; margin-bottom:0;'>Study Buddy</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#888;'>Your focused AI study companion</p>", unsafe_allow_html=True)
+st.markdown("""
+    <h1 style='text-align:center; font-size: 3rem; margin: 0.5rem 0 0.2rem 0; letter-spacing: -1px;'>
+        Study Buddy
+    </h1>
+    <p style='text-align:center; color:#64748b; font-size:1.1rem; margin-bottom:1.5rem;'>
+        Deep focus. Real results.
+    </p>
+""", unsafe_allow_html=True)
+
 st.markdown("---")
 
 # Main Layout
-col1, col2 = st.columns([1, 1.8])
+col1, col2 = st.columns([1.1, 1.9])
 
-# Left Column - Timer + Tasks
+# LEFT - Timer + Tasks
 with col1:
-    # Pomodoro Timer
-    st.subheader("⏱️ Focus Timer")
+    st.subheader("⏱️ Focus Session")
     
     if 'time_left' not in st.session_state:
         st.session_state.time_left = 50 * 60
@@ -44,7 +69,7 @@ with col1:
     st.markdown(f"<div class='big-timer'>{minutes:02d}:{seconds:02d}</div>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
-    if c1.button("▶️ Start", use_container_width=True, type="primary"):
+    if c1.button("▶️ Start Focus", use_container_width=True, type="primary"):
         st.session_state.is_running = True
     if c2.button("⏸️ Pause", use_container_width=True):
         st.session_state.is_running = False
@@ -58,40 +83,40 @@ with col1:
         st.rerun()
 
     if st.session_state.time_left <= 0:
-        st.success("Session Complete! Take a short break.")
+        st.success("Session Complete → Take 10 min break")
 
     # Tasks
     st.subheader("✅ Tasks")
-    task = st.text_input("New Task", placeholder="What do you want to accomplish?")
+    task = st.text_input("New Task", placeholder="What will you crush today?")
     if st.button("Add Task", use_container_width=True):
         if 'tasks' not in st.session_state:
             st.session_state.tasks = []
-        if task:
+        if task.strip():
             st.session_state.tasks.append({"text": task, "done": False})
+            st.rerun()
 
     if 'tasks' in st.session_state:
-        for i, t in enumerate(st.session_state.tasks[:]):
-            col_a, col_b = st.columns([4,1])
-            done = col_a.checkbox(t["text"], t["done"], key=f"cb{i}")
-            st.session_state.tasks[i]["done"] = done
-            if col_b.button("🗑️", key=f"del{i}"):
+        for i, t in enumerate(st.session_state.tasks):
+            col_a, col_b = st.columns([4.5, 0.5])
+            st.session_state.tasks[i]["done"] = col_a.checkbox(t["text"], t["done"], key=f"cb{i}")
+            if col_b.button("×", key=f"del{i}"):
                 del st.session_state.tasks[i]
                 st.rerun()
 
-# Right Column - AI Chat + Notes
+# RIGHT - AI + Notes
 with col2:
-    st.subheader("💬 Talk to Study Buddy AI")
+    st.subheader("💬 AI Study Companion")
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hello! I'm your Study Buddy. What are we working on today?"}]
+        st.session_state.messages = [{"role": "assistant", "content": "I'm here to help you stay focused. What are we studying today?"}]
 
-    chat_area = st.container(height=380)
+    chat_area = st.container(height=420)
     with chat_area:
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Ask for explanation, quiz, motivation..."):
+    if prompt := st.chat_input("Ask me anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -109,13 +134,12 @@ with col2:
                     st.session_state.messages.append({"role": "assistant", "content": reply})
                     st.rerun()
                 except:
-                    st.error("Check your OpenAI key in Secrets")
+                    st.error("OpenAI Error - Check Secrets")
 
-    # Quick Notes
     st.subheader("📝 Quick Notes")
-    notes = st.text_area("", height=180, placeholder="Write important points, formulas, etc.", value=st.session_state.get("notes", ""))
-    if st.button("Save Notes"):
+    notes = st.text_area("Write important points here...", height=160, value=st.session_state.get("notes", ""))
+    if st.button("Save Notes", use_container_width=True):
         st.session_state.notes = notes
-        st.toast("Notes saved ✅")
+        st.toast("✅ Notes Saved", icon="💾")
 
-st.caption("Study Buddy • Built by Sauban Ghazi")
+st.caption("Study Buddy • AI Hive Project by Sauban Ghazi")
