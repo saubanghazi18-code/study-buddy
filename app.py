@@ -3,81 +3,101 @@ import time
 
 st.set_page_config(page_title="Study Buddy", page_icon="📚", layout="wide")
 
-# ====================== OPENAI KEY CHECK ======================
+# OpenAI Key Check
 if "OPENAI_API_KEY" in st.secrets:
     import openai
     openai.api_key = st.secrets["OPENAI_API_KEY"]
-    st.sidebar.success("✅ OpenAI Connected")
+    st.success("✅ AI Connected", icon="🔗")
 else:
-    st.sidebar.error("❌ OpenAI API Key not found!")
-    st.sidebar.info("Go to Settings → Secrets and add OPENAI_API_KEY")
+    st.warning("OpenAI key not found in Secrets", icon="⚠️")
 
-# ====================== SIDEBAR ======================
-st.sidebar.title("Study Buddy")
-st.sidebar.caption("Dark Mature Theme • AI Hive")
+# ====================== HEADER ======================
+st.markdown("""
+    <h1 style='text-align: center; color: #67e8f9; font-size: 2.8rem; margin-bottom: 0.5rem;'>
+        Study Buddy
+    </h1>
+    <p style='text-align: center; color: #a1a1aa;'>Stay focused • Dark Mode</p>
+""", unsafe_allow_html=True)
 
-page = st.sidebar.radio(
-    "Navigation",
-    ["📊 Dashboard", "⏱️ Pomodoro", "✅ Tasks", "💬 AI Study Buddy", "📝 Notes"]
-)
+st.markdown("---")
 
-# ====================== PAGES ======================
-if page == "📊 Dashboard":
-    st.title("Good evening, Student 👋")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Focus Time", "2h 45m")
-    col2.metric("Tasks Done", "4")
-    col3.metric("Streak", "8 days 🔥")
+# ====================== LAYOUT ======================
+col_left, col_center, col_right = st.columns([1.2, 1.8, 1.2])
 
-elif page == "⏱️ Pomodoro":
-    st.title("⏱️ Pomodoro Timer")
+# ================= LEFT COLUMN - TASKS =================
+with col_left:
+    st.subheader("✅ Today's Tasks")
+    
+    if 'tasks' not in st.session_state:
+        st.session_state.tasks = [
+            {"text": "Complete Math Chapter 5", "done": False},
+            {"text": "Revise Physics Notes", "done": False}
+        ]
+
+    task_input = st.text_input("Add new task", placeholder="e.g. Solve 10 questions")
+    if st.button("Add", use_container_width=True):
+        if task_input:
+            st.session_state.tasks.append({"text": task_input, "done": False})
+            st.rerun()
+
+    for i, task in enumerate(st.session_state.tasks):
+        col1, col2 = st.columns([4,1])
+        st.session_state.tasks[i]["done"] = col1.checkbox(task["text"], task["done"], key=f"task{i}")
+        if col2.button("🗑️", key=f"del{i}"):
+            del st.session_state.tasks[i]
+            st.rerun()
+
+# ================= CENTER COLUMN - POMODORO =================
+with col_center:
+    st.subheader("⏱️ Pomodoro Timer")
+    
     if 'time_left' not in st.session_state:
         st.session_state.time_left = 50 * 60
         st.session_state.is_running = False
 
+    # Big Timer Display
     minutes, seconds = divmod(st.session_state.time_left, 60)
-    st.markdown(f"<h1 style='text-align:center;font-size:5.5rem;font-family:monospace'>{minutes:02d}:{seconds:02d}</h1>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style='text-align: center; font-size: 6.5rem; font-family: monospace; font-weight: bold; color: #67e8f9;'>
+            {minutes:02d}:{seconds:02d}
+        </div>
+    """, unsafe_allow_html=True)
 
-    c1, c2, c3 = st.columns(3)
-    if c1.button("Start", use_container_width=True):
+    # Buttons
+    btn1, btn2, btn3 = st.columns(3)
+    if btn1.button("▶️ Start", use_container_width=True, type="primary"):
         st.session_state.is_running = True
-    if c2.button("Pause", use_container_width=True):
+    if btn2.button("⏸️ Pause", use_container_width=True):
         st.session_state.is_running = False
-    if c3.button("Reset", use_container_width=True):
+    if btn3.button("🔄 Reset", use_container_width=True):
         st.session_state.time_left = 50 * 60
         st.session_state.is_running = False
 
+    # Timer Logic
     if st.session_state.is_running and st.session_state.time_left > 0:
         time.sleep(1)
         st.session_state.time_left -= 1
         st.rerun()
 
-elif page == "✅ Tasks":
-    st.title("✅ Tasks")
-    task = st.text_input("New Task")
-    if st.button("Add Task"):
-        if 'tasks' not in st.session_state:
-            st.session_state.tasks = []
-        st.session_state.tasks.append({"text": task, "done": False})
+    if st.session_state.time_left <= 0:
+        st.success("🎉 Session Complete! Take a 10 min break.")
+        st.session_state.is_running = False
 
-    if 'tasks' in st.session_state:
-        for i, t in enumerate(st.session_state.tasks):
-            col1, col2 = st.columns([4,1])
-            st.session_state.tasks[i]["done"] = col1.checkbox(t["text"], t["done"], key=i)
-            if col2.button("Delete", key=f"d{i}"):
-                del st.session_state.tasks[i]
-                st.rerun()
-
-elif page == "💬 AI Study Buddy":
-    st.title("💬 AI Study Buddy")
-    st.caption("Your personal study assistant")
-
+# ================= RIGHT COLUMN - AI CHAT =================
+with col_right:
+    st.subheader("💬 Study Buddy AI")
+    
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I help you study today?"}]
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hi! How can I help you study better today?"}
+        ]
 
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+    chat_container = st.container(height=420)
+
+    with chat_container:
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
 
     if prompt := st.chat_input("Ask anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -95,13 +115,14 @@ elif page == "💬 AI Study Buddy":
                     st.session_state.messages.append({"role": "assistant", "content": reply})
                     st.rerun()
                 except:
-                    st.error("API Error - Check your key in Secrets")
+                    st.error("AI Error - Check your API key in Secrets")
 
-elif page == "📝 Notes":
-    st.title("📝 Notes")
-    notes = st.text_area("Write here...", height=400, value=st.session_state.get("notes", ""))
-    if st.button("Save Notes"):
-        st.session_state.notes = notes
-        st.success("Notes Saved!")
+# ====================== NOTES SECTION (Bottom) ======================
+st.markdown("---")
+st.subheader("📝 Quick Notes")
+notes = st.text_area("Write your notes here...", height=180, value=st.session_state.get("notes", ""))
+if st.button("💾 Save Notes"):
+    st.session_state.notes = notes
+    st.success("Notes Saved!")
 
-st.sidebar.caption("Made for AI Hive")
+st.caption("Made for AI Hive • Study Buddy")
