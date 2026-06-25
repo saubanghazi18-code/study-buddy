@@ -118,4 +118,4 @@ with col2:
         st.session_state.notes = notes
         st.toast("Notes saved ✅")
 
-st.caption("Study Buddy • Built for AI Hive")
+st.caption("Study Buddy • Built by Sauban Ghazi")
