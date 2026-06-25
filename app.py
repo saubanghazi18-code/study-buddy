@@ -1,105 +1,97 @@
 import streamlit as st
 import time
 
-st.set_page_config(page_title="Study Buddy", page_icon="📚", layout="wide")
+st.set_page_config(page_title="Study Buddy", layout="wide", initial_sidebar_state="collapsed")
 
-# OpenAI Key Check
-if "OPENAI_API_KEY" in st.secrets:
-    import openai
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
-    st.success("✅ AI Connected", icon="🔗")
-else:
-    st.warning("OpenAI key not found in Secrets", icon="⚠️")
-
-# ====================== HEADER ======================
+# Dark Mature Theme
 st.markdown("""
-    <h1 style='text-align: center; color: #67e8f9; font-size: 2.8rem; margin-bottom: 0.5rem;'>
-        Study Buddy
-    </h1>
-    <p style='text-align: center; color: #a1a1aa;'>Stay focused • Dark Mode</p>
+<style>
+    .stApp {
+        background-color: #0a0a0a;
+        color: #e5e5e5;
+    }
+    h1, h2, h3 {
+        color: #67e8f9;
+    }
+    .big-timer {
+        font-size: 7rem;
+        font-weight: bold;
+        font-family: monospace;
+        text-align: center;
+        color: #67e8f9;
+    }
+</style>
 """, unsafe_allow_html=True)
 
+# Header
+st.markdown("<h1 style='text-align:center; margin-bottom:0;'>Study Buddy</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#888;'>Your focused AI study companion</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# ====================== LAYOUT ======================
-col_left, col_center, col_right = st.columns([1.2, 1.8, 1.2])
+# Main Layout
+col1, col2 = st.columns([1, 1.8])
 
-# ================= LEFT COLUMN - TASKS =================
-with col_left:
-    st.subheader("✅ Today's Tasks")
-    
-    if 'tasks' not in st.session_state:
-        st.session_state.tasks = [
-            {"text": "Complete Math Chapter 5", "done": False},
-            {"text": "Revise Physics Notes", "done": False}
-        ]
-
-    task_input = st.text_input("Add new task", placeholder="e.g. Solve 10 questions")
-    if st.button("Add", use_container_width=True):
-        if task_input:
-            st.session_state.tasks.append({"text": task_input, "done": False})
-            st.rerun()
-
-    for i, task in enumerate(st.session_state.tasks):
-        col1, col2 = st.columns([4,1])
-        st.session_state.tasks[i]["done"] = col1.checkbox(task["text"], task["done"], key=f"task{i}")
-        if col2.button("🗑️", key=f"del{i}"):
-            del st.session_state.tasks[i]
-            st.rerun()
-
-# ================= CENTER COLUMN - POMODORO =================
-with col_center:
-    st.subheader("⏱️ Pomodoro Timer")
+# Left Column - Timer + Tasks
+with col1:
+    # Pomodoro Timer
+    st.subheader("⏱️ Focus Timer")
     
     if 'time_left' not in st.session_state:
         st.session_state.time_left = 50 * 60
         st.session_state.is_running = False
 
-    # Big Timer Display
     minutes, seconds = divmod(st.session_state.time_left, 60)
-    st.markdown(f"""
-        <div style='text-align: center; font-size: 6.5rem; font-family: monospace; font-weight: bold; color: #67e8f9;'>
-            {minutes:02d}:{seconds:02d}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"<div class='big-timer'>{minutes:02d}:{seconds:02d}</div>", unsafe_allow_html=True)
 
-    # Buttons
-    btn1, btn2, btn3 = st.columns(3)
-    if btn1.button("▶️ Start", use_container_width=True, type="primary"):
+    c1, c2, c3 = st.columns(3)
+    if c1.button("▶️ Start", use_container_width=True, type="primary"):
         st.session_state.is_running = True
-    if btn2.button("⏸️ Pause", use_container_width=True):
+    if c2.button("⏸️ Pause", use_container_width=True):
         st.session_state.is_running = False
-    if btn3.button("🔄 Reset", use_container_width=True):
+    if c3.button("🔄 Reset", use_container_width=True):
         st.session_state.time_left = 50 * 60
         st.session_state.is_running = False
 
-    # Timer Logic
     if st.session_state.is_running and st.session_state.time_left > 0:
         time.sleep(1)
         st.session_state.time_left -= 1
         st.rerun()
 
     if st.session_state.time_left <= 0:
-        st.success("🎉 Session Complete! Take a 10 min break.")
-        st.session_state.is_running = False
+        st.success("Session Complete! Take a short break.")
 
-# ================= RIGHT COLUMN - AI CHAT =================
-with col_right:
-    st.subheader("💬 Study Buddy AI")
+    # Tasks
+    st.subheader("✅ Tasks")
+    task = st.text_input("New Task", placeholder="What do you want to accomplish?")
+    if st.button("Add Task", use_container_width=True):
+        if 'tasks' not in st.session_state:
+            st.session_state.tasks = []
+        if task:
+            st.session_state.tasks.append({"text": task, "done": False})
+
+    if 'tasks' in st.session_state:
+        for i, t in enumerate(st.session_state.tasks[:]):
+            col_a, col_b = st.columns([4,1])
+            done = col_a.checkbox(t["text"], t["done"], key=f"cb{i}")
+            st.session_state.tasks[i]["done"] = done
+            if col_b.button("🗑️", key=f"del{i}"):
+                del st.session_state.tasks[i]
+                st.rerun()
+
+# Right Column - AI Chat + Notes
+with col2:
+    st.subheader("💬 Talk to Study Buddy AI")
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "Hi! How can I help you study better today?"}
-        ]
+        st.session_state.messages = [{"role": "assistant", "content": "Hello! I'm your Study Buddy. What are we working on today?"}]
 
-    chat_container = st.container(height=420)
-
-    with chat_container:
+    chat_area = st.container(height=380)
+    with chat_area:
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Ask anything..."):
+    if prompt := st.chat_input("Ask for explanation, quiz, motivation..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -107,6 +99,8 @@ with col_right:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
+                    import openai
+                    openai.api_key = st.secrets["OPENAI_API_KEY"]
                     response = openai.ChatCompletion.create(
                         model="gpt-4o-mini",
                         messages=st.session_state.messages
@@ -115,14 +109,13 @@ with col_right:
                     st.session_state.messages.append({"role": "assistant", "content": reply})
                     st.rerun()
                 except:
-                    st.error("AI Error - Check your API key in Secrets")
+                    st.error("Check your OpenAI key in Secrets")
 
-# ====================== NOTES SECTION (Bottom) ======================
-st.markdown("---")
-st.subheader("📝 Quick Notes")
-notes = st.text_area("Write your notes here...", height=180, value=st.session_state.get("notes", ""))
-if st.button("💾 Save Notes"):
-    st.session_state.notes = notes
-    st.success("Notes Saved!")
+    # Quick Notes
+    st.subheader("📝 Quick Notes")
+    notes = st.text_area("", height=180, placeholder="Write important points, formulas, etc.", value=st.session_state.get("notes", ""))
+    if st.button("Save Notes"):
+        st.session_state.notes = notes
+        st.toast("Notes saved ✅")
 
-st.caption("Made for AI Hive • Study Buddy")
+st.caption("Study Buddy • Built for AI Hive")
