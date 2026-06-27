@@ -127,4 +127,4 @@ with col2:
         st.success("Notes saved!")
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.caption("Study Buddy • AI Hive Project")
+st.caption("Study Buddy • Project By Sauban Ghazi")
