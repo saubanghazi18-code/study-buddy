@@ -5,7 +5,7 @@ import google.generativeai as genai
 st.set_page_config(page_title="Study Buddy", layout="wide")
 
 # ====================== GEMINI API KEY ======================
-GEMINI_API_KEY = "paste-your-gemini-key-here"   # ←←← PASTE YOUR KEY HERE
+GEMINI_API_KEY = "AQ.Ab8RN6JqlUJJYKqy34DncM7CzK40aXNfLlMyXYv99M4QDdLKlw"   # ←←← PASTE YOUR KEY HERE
 
 if GEMINI_API_KEY and GEMINI_API_KEY != "paste-your-gemini-key-here":
     genai.configure(api_key=GEMINI_API_KEY)
