@@ -5,7 +5,7 @@ from openai import OpenAI
 st.set_page_config(page_title="Study Buddy", layout="wide")
 
 # ==================== OPENAI API KEY ====================
-OPENAI_API_KEY = "sk-.............................."   # ←←← PASTE YOUR OPENAI KEY HERE
+OPENAI_API_KEY = "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"   # ←←← PASTE YOUR OPENAI KEY HERE
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 st.sidebar.success("✅ OpenAI Connected")
