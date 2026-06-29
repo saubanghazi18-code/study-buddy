@@ -5,16 +5,16 @@ import google.generativeai as genai
 st.set_page_config(page_title="Study Buddy", layout="wide")
 
 # ====================== GEMINI API KEY ======================
-GEMINI_API_KEY = "AQ.Ab8RN6JqlUJJYKqy34DncM7CzK40aXNfLlMyXYv99M4QDdLKlw"   # ←←← PASTE YOUR GEMINI KEY HERE
+GEMINI_API_KEY = "paste-your-gemini-key-here"   # ←←← PASTE YOUR KEY HERE
 
-if GEMINI_API_KEY and GEMINI_API_KEY != "your-gemini-key-here":
+if GEMINI_API_KEY and GEMINI_API_KEY != "paste-your-gemini-key-here":
     genai.configure(api_key=GEMINI_API_KEY)
     st.sidebar.success("✅ Gemini Connected")
 else:
-    st.sidebar.error("❌ Put your Gemini API Key above")
+    st.sidebar.error("❌ Please add your Gemini API Key")
 # =========================================================
 
-# Theme (same as before)
+# Theme
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); }
@@ -54,10 +54,9 @@ with col1:
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Tasks (same)
     st.markdown("<div class='card mt-6'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>✅ Tasks</p>", unsafe_allow_html=True)
-    task = st.text_input("Add new task")
+    task = st.text_input("Add new task", placeholder="What will you complete?")
     if st.button("Add Task", use_container_width=True):
         if 'tasks' not in st.session_state: st.session_state.tasks = []
         if task: st.session_state.tasks.append({"text": task, "done": False})
@@ -76,7 +75,7 @@ with col2:
     st.markdown("<p class='title'>💬 AI Study Companion (Gemini)</p>", unsafe_allow_html=True)
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hi! I'm Gemini-powered Study Buddy. How can I help you today?"}]
+        st.session_state.messages = [{"role": "assistant", "content": "Hi! I'm your Gemini-powered Study Buddy. How can I help you today?"}]
 
     chat_box = st.container(height=380)
     with chat_box:
@@ -86,7 +85,8 @@ with col2:
 
     if prompt := st.chat_input("Ask anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"): st.markdown(prompt)
+        with st.chat_message("user"): 
+            st.markdown(prompt)
         
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
@@ -100,7 +100,6 @@ with col2:
                     st.error(f"Error: {str(e)}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Notes
     st.markdown("<div class='card mt-6'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>📝 Quick Notes</p>", unsafe_allow_html=True)
     notes = st.text_area("", height=170, placeholder="Write your notes here...")
