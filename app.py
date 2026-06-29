@@ -3,19 +3,18 @@ import time
 
 st.set_page_config(page_title="Study Buddy", layout="wide")
 
-# ====================== TEMPORARY API KEY ======================
-# PUT YOUR KEY HERE (only for testing)
-OPENAI_API_KEY = "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"   # ←←← PASTE YOUR FULL KEY HERE
+# ====================== PUT YOUR API KEY HERE ======================
+OPENAI_API_KEY = "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"   # ←←← PASTE YOUR KEY HERE
 
-if OPENAI_API_KEY.startswith("sk-"):
+if OPENAI_API_KEY and OPENAI_API_KEY.startswith("sk-"):
     import openai
-    openai.api_key = OPENAI_API_KEY
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
     st.sidebar.success("✅ API Key Loaded")
 else:
-    st.sidebar.error("❌ Put your API key in the code")
-# ============================================================
+    st.sidebar.error("❌ Please put your API key above")
+# =================================================================
 
-# Attractive Theme
+# Theme
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); }
@@ -50,8 +49,8 @@ with col1:
         st.session_state.time_left = 50 * 60
         st.session_state.is_running = False
 
-    min, sec = divmod(st.session_state.time_left, 60)
-    st.markdown(f"<div class='timer-text text-center'>{min:02d}:{sec:02d}</div>", unsafe_allow_html=True)
+    min_, sec = divmod(st.session_state.time_left, 60)
+    st.markdown(f"<div class='timer-text text-center'>{min_:02d}:{sec:02d}</div>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
     if c1.button("▶️ Start", use_container_width=True, type="primary"):
@@ -70,7 +69,7 @@ with col1:
 
     st.markdown("<div class='card mt-6'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>✅ Tasks</p>", unsafe_allow_html=True)
-    task = st.text_input("Add new task")
+    task = st.text_input("Add new task", placeholder="What will you complete?")
     if st.button("Add Task", use_container_width=True):
         if 'tasks' not in st.session_state: st.session_state.tasks = []
         if task: st.session_state.tasks.append({"text": task, "done": False})
@@ -89,7 +88,7 @@ with col2:
     st.markdown("<p class='title'>💬 AI Study Companion</p>", unsafe_allow_html=True)
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I help you today?"}]
+        st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I help you study today?"}]
 
     chat_box = st.container(height=380)
     with chat_box:
@@ -99,11 +98,16 @@ with col2:
 
     if prompt := st.chat_input("Ask anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"): st.markdown(prompt)
+        with st.chat_message("user"): 
+            st.markdown(prompt)
+        
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    response = openai.ChatCompletion.create(model="gpt-4o-mini", messages=st.session_state.messages)
+                    response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=st.session_state.messages
+                    )
                     reply = response.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": reply})
                     st.rerun()
