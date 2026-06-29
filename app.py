@@ -3,6 +3,18 @@ import time
 
 st.set_page_config(page_title="Study Buddy", layout="wide")
 
+# ====================== TEMPORARY API KEY ======================
+# PUT YOUR KEY HERE (only for testing)
+OPENAI_API_KEY = "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"   # ←←← PASTE YOUR FULL KEY HERE
+
+if OPENAI_API_KEY.startswith("sk-"):
+    import openai
+    openai.api_key = OPENAI_API_KEY
+    st.sidebar.success("✅ API Key Loaded")
+else:
+    st.sidebar.error("❌ Put your API key in the code")
+# ============================================================
+
 # Attractive Theme
 st.markdown("""
 <style>
@@ -12,14 +24,8 @@ st.markdown("""
         border: 1px solid #334155;
         border-radius: 20px;
         padding: 24px;
-        box-shadow: 0 10px 30px rgba(103, 232, 249, 0.08);
     }
-    .title {
-        color: #67e8f9;
-        font-size: 1.85rem;
-        font-weight: 600;
-        margin-bottom: 1.2rem;
-    }
+    .title { color: #67e8f9; font-size: 1.85rem; font-weight: 600; margin-bottom: 1.2rem; }
     .timer-text {
         font-size: 6.8rem;
         font-weight: 700;
@@ -30,15 +36,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Main Header
-st.markdown("<h1 style='text-align:center; font-size:3.5rem; margin-bottom:0.3rem; color:#a5f3fc;'>Study Buddy</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#64748b; font-size:1.25rem;'>Focus. Learn. Achieve.</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; font-size:3.5rem; color:#a5f3fc;'>Study Buddy</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#64748b;'>Focus. Learn. Achieve.</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 col1, col2 = st.columns([1.05, 1.95])
 
 with col1:
-    # Timer Section
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>⏱️ Focus Timer</p>", unsafe_allow_html=True)
     
@@ -62,14 +66,11 @@ with col1:
         time.sleep(1)
         st.session_state.time_left -= 1
         st.rerun()
-
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Tasks Section
     st.markdown("<div class='card mt-6'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>✅ Tasks</p>", unsafe_allow_html=True)
-    
-    task = st.text_input("Add new task", placeholder="What will you complete?")
+    task = st.text_input("Add new task")
     if st.button("Add Task", use_container_width=True):
         if 'tasks' not in st.session_state: st.session_state.tasks = []
         if task: st.session_state.tasks.append({"text": task, "done": False})
@@ -84,12 +85,11 @@ with col1:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col2:
-    # AI Chat Section
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>💬 AI Study Companion</p>", unsafe_allow_html=True)
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I help you study today?"}]
+        st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I help you today?"}]
 
     chat_box = st.container(height=380)
     with chat_box:
@@ -103,23 +103,17 @@ with col2:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    import openai
-                    openai.api_key = st.secrets["OPENAI_API_KEY"]
-                    resp = openai.ChatCompletion.create(model="gpt-4o-mini", messages=st.session_state.messages)
-                    reply = resp.choices[0].message.content
+                    response = openai.ChatCompletion.create(model="gpt-4o-mini", messages=st.session_state.messages)
+                    reply = response.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": reply})
                     st.rerun()
-                except:
-                    st.error("Check API key in Secrets")
+                except Exception as e:
+                    st.error(f"API Error: {str(e)}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Notes Section
     st.markdown("<div class='card mt-6'>", unsafe_allow_html=True)
     st.markdown("<p class='title'>📝 Quick Notes</p>", unsafe_allow_html=True)
-    notes = st.text_area("", height=170, placeholder="Write key points, formulas, reminders...")
+    notes = st.text_area("", height=170, placeholder="Write your notes here...")
     if st.button("💾 Save Notes", use_container_width=True):
-        st.session_state.notes = notes
-        st.success("Notes saved successfully!")
+        st.success("Notes saved!")
     st.markdown("</div>", unsafe_allow_html=True)
-
-st.caption("Study Buddy • By Sauban Ghazi")
